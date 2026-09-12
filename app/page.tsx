@@ -1,65 +1,109 @@
-import Image from "next/image";
+'use client'
+
+import { useEffect, useState } from 'react'
+import { createClient } from '@/utils/supabase/client'
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
 
 export default function Home() {
+  const [diseases, setDiseases] = useState<any[]>([])
+  const supabase = createClient()
+
+  useEffect(() => {
+    async function fetchDiseases() {
+      const { data, error } = await supabase.from('diseases').select('*')
+      if (error) {
+        console.error('Error fetching diseases:', error)
+      } else {
+        setDiseases(data || [])
+      }
+    }
+    fetchDiseases()
+  }, [])
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <main className="min-h-screen bg-[#F5F3EC] p-6 md:p-12 text-[#232220]">
+      <div className="max-w-4xl mx-auto">
+        <header className="border-b-2 border-[#232220] pb-5 mb-8 flex justify-between items-end">
+          <div>
+            <p className="text-xs uppercase tracking-wider text-[#5C5A54] mb-1">Clinical Reference System</p>
+            <h1 className="text-3xl md:text-4xl font-bold tracking-tight">Personal Medical Knowledge Base</h1>
+          </div>
+          <span className="text-sm text-[#5C5A54]">{diseases.length} disease(s)</span>
+        </header>
+
+        <div className="space-y-6">
+          {diseases.length === 0 ? (
+            <p className="text-[#5C5A54] text-center py-12">กำลังโหลดข้อมูล หรือยังไม่มีข้อมูลโรคในระบบ</p>
+          ) : (
+            diseases.map((d) => (
+              <Card key={d.id} className="bg-white border-[#E4E0D4] shadow-sm">
+                <CardHeader>
+                  <CardTitle className="text-2xl font-bold mb-2">{d.disease_name}</CardTitle>
+                  <div className="flex flex-wrap gap-2">
+                    {d.disease_tags?.map((tag: string, idx: number) => (
+                      <Badge key={idx} variant="secondary" className="bg-[#ECE9E0] text-[#5C5A54]">
+                        {tag}
+                      </Badge>
+                    ))}
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-4 text-sm leading-relaxed">
+                  
+                  {/* Dimension 1: เปิดโชว์เป็น Default เสมอ */}
+                  <div className="p-4 bg-[#E7EFEF] rounded-md border-l-4 border-[#2C5F6F]">
+                    <h3 className="font-semibold text-[#2C5F6F] mb-1">01. Clinical Signatures</h3>
+                    <p className="whitespace-pre-line text-[#232220]">{d.dim1_clinical_signatures}</p>
+                  </div>
+
+                  {/* Dimension 2-5: พับเก็บได้ด้วย Accordion */}
+                  <Accordion className="w-full">
+                    
+                    <AccordionItem value="dim2" className="border-[#E4E0D4]">
+                      <AccordionTrigger className="text-[#2C5F6F] hover:no-underline font-semibold">
+                        02. Targeted Hx & High-Yield PE
+                      </AccordionTrigger>
+                      <AccordionContent>
+                        <p className="whitespace-pre-line text-[#232220] pt-2">{d.dim2_targeted_hx_pe}</p>
+                      </AccordionContent>
+                    </AccordionItem>
+
+                    <AccordionItem value="dim3" className="border-[#E4E0D4]">
+                      <AccordionTrigger className="text-[#2C5F6F] hover:no-underline font-semibold">
+                        03. Make-or-Break Investigations
+                      </AccordionTrigger>
+                      <AccordionContent>
+                        <p className="whitespace-pre-line text-[#232220] pt-2">{d.dim3_investigations}</p>
+                      </AccordionContent>
+                    </AccordionItem>
+
+                    <AccordionItem value="dim4" className="border-[#E4E0D4]">
+                      <AccordionTrigger className="text-[#2C5F6F] hover:no-underline font-semibold">
+                        04. Stepwise Management Plan
+                      </AccordionTrigger>
+                      <AccordionContent>
+                        <p className="whitespace-pre-line text-[#232220] pt-2">{d.dim4_management}</p>
+                      </AccordionContent>
+                    </AccordionItem>
+
+                    <AccordionItem value="dim5" className="border-[#E4E0D4]">
+                      <AccordionTrigger className="text-[#2C5F6F] hover:no-underline font-semibold">
+                        05. Patient Education & Advice
+                      </AccordionTrigger>
+                      <AccordionContent>
+                        <p className="whitespace-pre-line text-[#232220] pt-2">{d.dim5_education}</p>
+                      </AccordionContent>
+                    </AccordionItem>
+
+                  </Accordion>
+
+                </CardContent>
+              </Card>
+            ))
+          )}
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
-  );
+      </div>
+    </main>
+  )
 }
